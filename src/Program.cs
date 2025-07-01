@@ -19,6 +19,7 @@ var host = new HostBuilder()
             context.Configuration.GetSection("Api2PdfSettings"));
 
         var pdfServiceName = context.Configuration["PdfServiceName"];
+        System.Console.WriteLine($"Using PDF Service: {pdfServiceName}");
         if (string.IsNullOrEmpty(pdfServiceName))
         {
             throw new InvalidOperationException("PdfServiceName configuration is required.");
