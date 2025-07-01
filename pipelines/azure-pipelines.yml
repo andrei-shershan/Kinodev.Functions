@@ -46,6 +46,27 @@ stages:
         publishWebProjects: false
         zipAfterPublish: false
 
+    - task: CopyFiles@2
+      displayName: 'Ensure host.json is in publish root'
+      inputs:
+        SourceFolder: 'src'
+        Contents: 'host.json'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/publish'
+        OverWrite: true
+
+    - script: |
+        echo "Verifying deployment package structure:"
+        ls -la $(Build.ArtifactStagingDirectory)/publish/
+        echo "Checking for host.json:"
+        if [ -f "$(Build.ArtifactStagingDirectory)/publish/host.json" ]; then
+          echo "✓ host.json found in publish root"
+          cat $(Build.ArtifactStagingDirectory)/publish/host.json
+        else
+          echo "✗ host.json NOT found in publish root"
+          exit 1
+        fi
+      displayName: 'Verify deployment package structure'
+
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Build Artifacts'
       inputs:
