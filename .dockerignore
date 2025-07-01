@@ -1,0 +1,15 @@
+# Docker ignore patterns
+bin/
+src/bin/
+obj/
+src/obj/
+.vs/
+.vscode/
+.git/
+.gitignore
+*.md
+Dockerfile*
+docker-compose*
+.dockerignore
+local.settings.json
+
