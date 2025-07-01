@@ -16,6 +16,7 @@
   <ItemGroup>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
     <None Update="local.settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -25,4 +26,9 @@
   <ItemGroup>
     <Using Include="System.Threading.ExecutionContext" Alias="ExecutionContext" />
   </ItemGroup>
+  
+  <!-- Ensure host.json is in the right location for Azure Functions deployment -->
+  <Target Name="CopyHostJsonToRoot" BeforeTargets="Publish">
+    <Copy SourceFiles="host.json" DestinationFolder="$(MSBuildProjectDirectory)\.." Condition="Exists('host.json')" />
+  </Target>
 </Project>
