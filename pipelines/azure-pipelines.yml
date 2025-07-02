@@ -47,30 +47,6 @@ stages:
         zipAfterPublish: false
         workingDirectory: 'src'
 
-    - script: |
-        echo "Verifying deployment package structure:"
-        find $(Build.ArtifactStagingDirectory)/publish -type f -name "*.json" -o -name "*.dll" -o -name "*.exe" | head -20
-        echo ""
-        echo "Checking for host.json:"
-        if [ -f "$(Build.ArtifactStagingDirectory)/publish/host.json" ]; then
-          echo "✓ host.json found in publish root"
-          echo "Content of host.json:"
-          cat $(Build.ArtifactStagingDirectory)/publish/host.json
-        else
-          echo "✗ host.json NOT found in publish root"
-          echo "Files in publish directory:"
-          ls -la $(Build.ArtifactStagingDirectory)/publish/
-          exit 1
-        fi
-        echo ""
-        echo "Checking for functions metadata:"
-        if [ -f "$(Build.ArtifactStagingDirectory)/publish/functions.metadata" ]; then
-          echo "✓ functions.metadata found"
-        else
-          echo "✗ functions.metadata NOT found"
-        fi
-      displayName: 'Verify deployment package structure'
-
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Build Artifacts'
       inputs:
