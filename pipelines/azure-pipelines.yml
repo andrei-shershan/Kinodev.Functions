@@ -20,13 +20,13 @@ stages:
           packageType: 'sdk'
           version: '8.0.x'
 
-      - script: dotnet restore AzureFunctionsApp.Functions.csproj
+      - script: dotnet restore Kinodev.Functions.csproj
         displayName: 'Restore dependencies'
 
-      - script: dotnet build AzureFunctionsApp.Functions.csproj --configuration $(buildConfiguration) --no-restore
+      - script: dotnet build Kinodev.Functions.csproj --configuration $(buildConfiguration) --no-restore
         displayName: 'Build project'
 
-      - script: dotnet publish AzureFunctionsApp.Functions.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish
+      - script: dotnet publish Kinodev.Functions.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish
         displayName: 'Publish artifacts'
 
       - task: ArchiveFiles@2
