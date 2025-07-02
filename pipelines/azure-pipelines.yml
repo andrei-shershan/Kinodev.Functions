@@ -1,84 +1,66 @@
 trigger:
   branches:
     include:
-    - main
-
-pool:
-  vmImage: 'ubuntu-latest'
+      - main
 
 variables:
   buildConfiguration: 'Release'
-  dotNetFramework: 'net8.0'
-  dotNetVersion: '8.0.x'
 
 stages:
 - stage: Build
-  displayName: 'Build Stage'
+  displayName: 'Build and Publish'
   jobs:
   - job: Build
-    displayName: 'Build Job'
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
-    - task: UseDotNet@2
-      displayName: 'Use .NET Core SDK $(dotNetVersion)'
-      inputs:
-        version: $(dotNetVersion)
-        includePreviewVersions: true
+      - task: UseDotNet@2
+        displayName: 'Use .NET SDK'
+        inputs:
+          packageType: 'sdk'
+          version: '8.0.x'
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Restore NuGet packages'
-      inputs:
-        command: 'restore'
-        projects: 'Kinodev.Functions.sln'
+      - script: dotnet restore AzureFunctionsApp.Functions.csproj
+        displayName: 'Restore dependencies'
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Build solution'
-      inputs:
-        command: 'build'
-        projects: 'Kinodev.Functions.sln'
-        arguments: '--configuration $(buildConfiguration) --no-restore'
+      - script: dotnet build AzureFunctionsApp.Functions.csproj --configuration $(buildConfiguration) --no-restore
+        displayName: 'Build project'
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Publish Azure Function'
-      inputs:
-        command: 'publish'
-        projects: 'src/Kinodev.Functions.csproj'
-        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish --no-build --self-contained false'
-        publishWebProjects: false
-        zipAfterPublish: false
-        workingDirectory: 'src'
+      - script: dotnet publish AzureFunctionsApp.Functions.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish
+        displayName: 'Publish artifacts'
 
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish Build Artifacts'
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'
-        ArtifactName: 'function-app'
-        publishLocation: 'Container'
+      - task: ArchiveFiles@2
+        displayName: 'Archive published files'
+        inputs:
+          rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+          includeRootFolder: false
+          archiveType: 'zip'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+          replaceExistingArchive: true
+
+      - publish: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+        artifact: drop
 
 - stage: Deploy
-  displayName: 'Deploy to Azure'
+  displayName: 'Deploy to Azure Functions'
   dependsOn: Build
-  condition: succeeded()
   jobs:
-  - deployment: DeployToAzure
-    displayName: 'Deploy to Azure Function App'
+  - deployment: DeployFunction
+    displayName: 'Deploy Function App'
     environment: 'kinodev-live'
+    pool:
+      vmImage: 'ubuntu-latest'
     strategy:
       runOnce:
         deploy:
           steps:
-          - task: DownloadBuildArtifacts@1
-            displayName: 'Download Build Artifacts'
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'function-app'
-              downloadPath: '$(System.ArtifactsDirectory)'
+            - download: current
+              artifact: drop
 
-          - task: AzureFunctionApp@1
-            displayName: 'Deploy Azure Function App'
-            inputs:
-              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
-              appType: 'functionApp'
-              appName: '$(AZURE_FUNCTION_NAME)'
-              package: '$(System.ArtifactsDirectory)/function-app'
-              deploymentMethod: 'auto'
+            - task: AzureFunctionApp@1
+              displayName: 'Deploy to Function App'
+              inputs:
+                azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+                appType: functionApp
+                appName: '$(AZURE_FUNCTION_NAME)'
+                package: '$(Pipeline.Workspace)/drop/functionapp.zip'
