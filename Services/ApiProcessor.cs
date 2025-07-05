@@ -23,7 +23,8 @@ namespace Kinodev.Functions.Services
             var response = await client.PostAsync("api/files/process-order-completed", content);
             if (!response.IsSuccessStatusCode)
             {
-                throw new HttpRequestException($"Failed to process order completed. Status code: {response.StatusCode}");
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Failed to process order completed. Status code: {response.StatusCode}, Error: {errorContent}");
             }
         }
 
