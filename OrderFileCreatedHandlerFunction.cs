@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Azure.Messaging.ServiceBus;
 using Kinodev.Functions.Services;
 
-
 namespace Kinodev.Functions
 {
     public class OrderFileCreatedHandler
