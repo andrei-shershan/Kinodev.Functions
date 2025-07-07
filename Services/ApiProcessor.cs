@@ -66,7 +66,5 @@ namespace Kinodev.Functions.Services
                 throw new HttpRequestException($"Failed to process order file url added. Status code: {response.StatusCode}");
             }
         }
-
-
     }
 }
